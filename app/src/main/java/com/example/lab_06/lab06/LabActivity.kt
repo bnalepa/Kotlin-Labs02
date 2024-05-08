@@ -2,7 +2,6 @@ package com.example.lab_06.lab06
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -40,6 +39,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 import com.example.lab_06.lab06.data.theme.Lab_06Theme
@@ -61,6 +62,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.lab_06.R
+import com.example.lab_06.lab06.data.viewModel.AppViewModelProvider
+import com.example.lab_06.lab06.data.viewModel.ListViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -83,7 +86,11 @@ class LabActivity : ComponentActivity() {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ListScreen(navController: NavController) {
+fun ListScreen(
+    navController: NavController,
+    viewModel: ListViewModel = viewModel(factory = AppViewModelProvider.Factory)
+) {
+    val listUiState by viewModel.listUiState.collectAsState()
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -108,14 +115,16 @@ fun ListScreen(navController: NavController) {
                 route = "form"
             )
         },
-        content = {
-            LazyColumn(modifier = Modifier.padding(it)) {
-                items(items = todoTasks()) { item ->
-                    ListItem(item = item)
+        content = { it ->
+            LazyColumn(
+                modifier = Modifier.padding(it)
+            ) {
+                items(items = listUiState.items, key = { it.id }) {
+                    println(it)
+                    ListItem(it)
                 }
             }
         }
-
     )
 }
 fun todoTasks(): List<TodoTask> {
@@ -138,7 +147,7 @@ data class TodoTask(
     val priority: Priority
 )
 @Composable
-fun ListItem(item: TodoTask, modifier: Modifier = Modifier) {
+fun ListItem(item: com.example.lab_06.lab06.data.entities.TodoTask, modifier: Modifier = Modifier) {
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
